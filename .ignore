@@ -1,0 +1,80 @@
+# =========================
+# Data and outputs
+# =========================
+data/
+codebook/
+
+# Common data formats
+*.rds
+*.Rds
+*.rda
+*.Rda
+*.RData
+*.sav
+*.dta
+*.sas7bdat
+*.feather
+*.parquet
+
+# Documents
+*.pdf
+*.docx
+*.pptx
+
+# =========================
+# R / RStudio
+# =========================
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+.Rproj.user/
+
+# R temporary or session files
+.RDataTmp*
+*.RDataTmp*
+*.Rhistory.tmp
+*.Rproj.user/
+
+# Workspace / session artifacts
+*.Rproj.user
+*.Rproj.user/*
+*.RDataTmp
+*.RDataTmp1
+*.RDataTmp2
+
+# =========================
+# Cache and notebooks
+# =========================
+*_cache/
+*_files/
+.cache/
+quarto_cache/
+.knit.md
+utf8.md
+
+# =========================
+# Logs
+# =========================
+*.log
+*.out
+*.err
+
+# =========================
+# System files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Editor / IDE
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# OS or temporary files
+# =========================
+*~
+*.tmp
+*.temp

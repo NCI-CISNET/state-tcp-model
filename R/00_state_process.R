@@ -2,7 +2,7 @@
 ## contains code for formatting and processing state specific life expectancy,
 ## census population data, mortality probabilities, and smoking initiation/cessation probabilities
 
-mainDir <- "/Users/wangmengyao/Desktop/GitHub/tcp-model-code/"
+mainDir <- "/Users/wangmengyao/Desktop/GitHub/state-tcp-model/"
 setwd(file.path(mainDir))
 
 library(reshape2)

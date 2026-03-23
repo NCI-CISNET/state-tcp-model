@@ -20,24 +20,34 @@ policy_year <- 2026
 price_elasticity <- -0.2 
 
 ## Load Model Results ----
-baseline_results <- readRDS("./analysis_output/20250510/baseline_results.rds") # TCP Model Baseline results
-tax_out_list <- readRDS("./analysis_output/20250510/tax_out_list.rds") # TCP Model Tax results (new elasticity, policyyear=2026)
+# baseline_results <- readRDS("./analysis_output/20250510/baseline_results.rds") # TCP Model Baseline results
+# tax_out_list <- readRDS("./analysis_output/20250510/tax_out_list.rds") # TCP Model Tax results (new elasticity, policyyear=2026)
 
 ## Load External Data Sources
 # Pack Sales Per Capita; Year = 2019 (Cigarette consumption)
-packs_pc <- read_xlsx("./tax_prevalence_economics/cigarette_consumption_pack_sales_per_capita.xlsx") 
-packs_pc  <- packs_pc %>% filter(Year == 2019)
+# packs_pc <- read_xlsx("./tax_prevalence_economics/cigarette_consumption_pack_sales_per_capita.xlsx") 
+# packs_pc  <- packs_pc %>% filter(Year == 2019)
 
 # Baseline cigarette price and tax
-baseline_price_per_pack <- read.csv("./tax_prevalence_economics/cigarette_prices_by_state_2025.csv") # baseline price per pack: Year 2025
-tax_per_pack <- read.csv("./tax_prevalence_economics/cigarette_prices_by_state_2025.csv") # state tax per pack Year: Year 2025
+# baseline_price_per_pack <- read.csv("./tax_prevalence_economics/cigarette_prices_by_state_2025.csv") # baseline price per pack: Year 2025
+# tax_per_pack <- read.csv("./tax_prevalence_economics/cigarette_prices_by_state_2025.csv") # state tax per pack Year: Year 2025
+
+
+
+baseline_results <- readRDS("./R/baseline_results.rds") # TCP Model Baseline results
+tax_out_list <- readRDS("./R/tax_out_list.rds")# TCP Model Tax results (new elasticity, policyyear=2026)
+packs_pc <- read_xlsx("./R/cigarette_consumption_pack_sales_per_capita.xlsx") 
+packs_pc  <- packs_pc %>% filter(Year == 2019)
+baseline_price_per_pack <- read.csv("./R/cigarette_prices_by_state_2025.csv") # baseline price per pack: Year 2025
+state_tax_per_pack <- read_xlsx("./R/state_tax_per_pack.xlsx") # state tax per pack: latest available year by state
+
 
 # =============================================================================
 # State population data PROCESSING: From census population data; Year: 2025 - 2100
 
 state_pop <- list() 
 for (f in v_statefips) {
-  load(file = paste0("data/state_inputs/pop_", f, ".RData"))  # load df_F.census_data + df_M.census_data
+  load(file = paste0("./data/state_inputs/pop_", f, ".RData"))  # load df_F.census_data + df_M.census_data
   state_pop[[f]] <- list(female = df_F.census_data, male = df_M.census_data)}
 
 ## Calculate Total State Population by Year ----
@@ -99,29 +109,41 @@ packs_clean <- packs_pc %>%
 
 ## Process Tax and Price Data ----
 lk <- setNames(state_lookup$abbr, state_lookup$state_name)
-tax_per_pack <- tax_per_pack %>% mutate(State = dplyr::coalesce(unname(lk[trimws(State)]), toupper(trimws(State))))
+baseline_price_per_pack <- baseline_price_per_pack %>%
+  mutate(State = dplyr::coalesce(unname(lk[trimws(State)]), toupper(trimws(State))))
 
-tax_clean <- tax_per_pack %>%                      
-  rename(abbr = State) %>%                       
+price_clean <- baseline_price_per_pack %>%
+  rename(abbr = State) %>%
   mutate(
     year = 2025L,
-    tax_per_pack = parse_number(as.character(total_state_tax_per_pack)),
     baseline_price_per_pack = parse_number(as.character(price_per_pack_incl_taxes))
   ) %>%
   left_join(state_lookup, by = "abbr") %>%       # adds fips
-  select(year, fips, abbr, tax_per_pack, baseline_price_per_pack)%>%
+  select(year, fips, abbr, baseline_price_per_pack) %>%
   group_by(fips, abbr) %>%
   complete(year = years_full) %>%
   arrange(year) %>%
-  fill(baseline_price_per_pack,tax_per_pack, .direction = "down") %>%
+  fill(baseline_price_per_pack, .direction = "down") %>%
   ungroup()
 
-# tax_clean already normalized to abbr + fips; now split:
-price_clean <- tax_clean %>%
-  select(year, fips, abbr, baseline_price_per_pack)
-
-tax_clean  <- tax_clean %>%
-  select(year, fips, abbr, tax_per_pack)
+tax_clean <- state_tax_per_pack %>%
+  transmute(
+    abbr = trimws(LocationAbbr),
+    year = as.integer(Year),
+    tax_per_pack = as.numeric(Data_Value)
+  ) %>%
+  filter(!is.na(abbr), !is.na(year), !is.na(tax_per_pack)) %>%
+  group_by(abbr) %>%
+  slice_max(order_by = year, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  mutate(year = 2025L) %>%
+  left_join(state_lookup, by = "abbr") %>%
+  select(year, fips, abbr, tax_per_pack) %>%
+  group_by(fips, abbr) %>%
+  complete(year = years_full) %>%
+  arrange(year) %>%
+  fill(tax_per_pack, .direction = "down") %>%
+  ungroup()
 
 # =============================================================================
 # ---- Baseline (consumption, revenue, intensity) ----
@@ -246,7 +268,7 @@ df_final_effects <- df_baseline %>%
                            policy_state_tax_revenue - baseline_state_tax_revenue, 0)
   )
 
-write.csv(df_final_effects, paste0("./tax_prevalence_economics/$3_revenue_output_", date_variable, ".csv"), row.names = FALSE)
+write.csv(df_final_effects, paste0("./R/$3_revenue_output_", date_variable, ".csv"), row.names = FALSE)
 
 
 # =============================================================================
@@ -312,8 +334,7 @@ df_final_effects <- df_baseline %>%
                            policy_state_tax_revenue - baseline_state_tax_revenue, 0)
   )
 
-write.csv(df_final_effects, paste0("./tax_prevalence_economics/$2_revenue_output_", date_variable, ".csv"), row.names = FALSE)
-
+write.csv(df_final_effects, paste0("./R/$2_revenue_output_", date_variable, ".csv"), row.names = FALSE)
 
 
 

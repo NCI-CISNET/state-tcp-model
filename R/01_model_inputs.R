@@ -1,7 +1,7 @@
 ### CISNET Population Model
 
 rm(list = ls()) 
-setwd("/Users/wangmengyao/Documents/GitHub/tcp-model-code/")
+setwd("/Users/wangmengyao/Desktop/GitHub/state-tcp-model/")
 
 # Package names
 packages <- c("ggplot2", "readxl", "readr", "dplyr", "tidyr", "reshape2","grid", 
