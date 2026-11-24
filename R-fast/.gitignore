@@ -1,0 +1,4 @@
+# Local settings (machine-specific paths); config.example.yml is the template.
+config.yml
+# Default output folder for local runs.
+output/

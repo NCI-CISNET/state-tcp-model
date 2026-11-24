@@ -1,0 +1,33 @@
+# Settings for the R-fast scripts. Copy to config.yml (git-ignored) and set the paths.
+# Paths may be absolute or relative to this file. Any setting can be overridden for one run with
+# a command-line flag of the same name, "_" written as "-" (e.g. --final-dir=/tmp/out --cache=off).
+
+inputs:
+  data_dir: /path/to/01_input_data/data        # folder holding state_inputs/
+  prices: /path/to/cigarette_prices_by_state_2025.csv
+  # Standardized model population, for the US results files (leave out to skip US results).
+  population_csv: /path/to/tax_out_list_standardized_population.csv
+
+# run_tax_grid.R: TCP tool files for the price-per-pack x added-tax grid.
+grid:
+  final_dir: /path/to/tcp-data/data/taxes/<version>   # TCP tool tree: <ST>/<year>/<type>/*.csv
+  # raw_dir: /path/to/raw                             # optional: per-scenario CSVs, as the original runs wrote
+  states: all                                         # or a list: [AK, CA]
+  policy_years: [2026, 2027, 2028, 2029, 2030, 2035, 2040]
+  ppp_targets: [8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15]
+  added_taxes: [0, 1, 1.5, 2, 2.5, 3]
+  workers: 8               # parallel processes; 8 is fastest on a 12-core M3 Pro
+  link: symlink            # duplicate files: symlink, hard (hard links) or off (copies)
+  cache: on                # reuse results of unchanged scenarios from earlier runs
+  kernel: on               # compiled C++ kernel (off: pure R, same results, slower)
+
+# run_tax_figures.R: baseline and +$1..+$5 tax runs with full outputs, and the R/04 tax figures.
+figures:
+  out_dir: /path/to/figures-output   # baseline_results.rds, tax_out_list.rds, figs/tax/*.jpg
+  policy_year: 2025
+  tax_increases: [1, 2, 3, 4, 5]
+  states: all
+  plots: on                # off: only the .rds files
+  formats: [svg]           # svg and/or jpg (600 dpi, as R/04 writes)
+  html: on                 # index.html showing every figure (needs svg)
+  workers: 8
